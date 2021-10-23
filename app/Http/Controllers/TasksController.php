@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Task;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -11,7 +12,8 @@ class TasksController extends Controller
 
     public function list()
     {
-        $data = DB::select('SELECT * FROM tasks');
+        //Get all Task rows
+        $data = Task::all();
         return view('tasks.list', ['data' => $data]);
     }
 
@@ -22,15 +24,14 @@ class TasksController extends Controller
 
     public function addAction(Request $request)
     {
-
         $request->validate([
             'title' => ['required', 'string']
         ]);
-        $this->title = $request->input('title');
-        DB::insert('INSERT INTO tasks (title) VALUES (?)', [$this->title]);
+        $title = $request->input('title');
+        DB::insert('INSERT INTO tasks (title) VALUES (?)', [$title]);
 
         return redirect()->route('tasks.list')
-            ->with('savedSuccefully', 'Task added succefully.');
+            ->with('savedSuccefully', 'Task added successfully.');
     }
 
     public function edit($id)
@@ -46,7 +47,7 @@ class TasksController extends Controller
         } else {
             return redirect()
                 ->route('tasks.list')
-                ->with('unableToLoad', 'Não foi possível alterar o item de ID #' . $id);
+                ->with('unableToLoad', 'Cannot update task with id #' . $id . ', please try again.');
         };
     }
 
@@ -75,7 +76,7 @@ class TasksController extends Controller
         } else {
             return redirect()
                 ->route('tasks.list')
-                ->with('unableToLoad', 'Não foi possível remover o item de ID #' . $id);
+                ->with('unableToLoad', 'Cannot delete task with id #' . $id . ', please try again.');
         };
     }
 
@@ -97,7 +98,7 @@ class TasksController extends Controller
 
     public function verifyTask($id)
     {
-        $task = DB::select('SELECT * FROM tasks WHERE id = ?', [$id]);
+        $task = DB::select('SELECT `id`, `title` FROM tasks WHERE id = ?', [$id]);
         return count($task) > 0 ? $task : false;
     }
 }

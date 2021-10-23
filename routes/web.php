@@ -34,14 +34,18 @@ Route::prefix('tasks')->group(function () {
     Route::get('mark/{id}', [TasksController::class, 'mark'])->name('tasks.mark'); //Mark as done or don't done
 });
 
+Route::fallback(function(){
+    return 'Você acessou uma rota inexistente.';
+});
 
-/*This route is an self made example of how simple routes works
+
+/*This route is a self-made example of how simple routes works
 In this case, I'm using a get method, but also can be post, and others http verbs
 Tip: type Route:: and press ctrl + spacebar to see the static methods of this class would be greapeful
-*/
-// Route::get('/teste', function(){
-//     return view('teste');
-// });
+//*/
+ Route::get('/teste', function(){
+     return view('teste');
+ });
 
 // Route::get('teste/{category}/edit/{algo}', function ($category, $algo) {
 //     echo 'editando o artigo da categoria ' . $category;
