@@ -27,8 +27,11 @@ class TasksController extends Controller
         $request->validate([
             'title' => ['required', 'string']
         ]);
-        $title = $request->input('title');
-        DB::insert('INSERT INTO tasks (title) VALUES (?)', [$title]);
+
+        //Add task using EloquentORM
+        $task = new Task();
+        $task->title = $request->title;
+        $task->save();
 
         return redirect()->route('tasks.list')
             ->with('savedSuccefully', 'Task added successfully.');
@@ -37,11 +40,11 @@ class TasksController extends Controller
     public function edit($id)
     {
         $task = $this->verifyTask($id);
-        if ($task !== false) {
+        if ($task) {
             return view(
                 'tasks.edit',
                 [
-                    'item' => $task[0]
+                    'item' => $task
                 ]
             );
         } else {
@@ -58,7 +61,21 @@ class TasksController extends Controller
             'title' => ['required', 'string']
         ]);
 
-        DB::update('UPDATE tasks SET title = ? WHERE id = ?', [$request->title, $id]);
+        //Updating task with EloquentORM
+        $task = self::verifyTask($id);
+        $task->title = $request->title;
+        $task->save();
+
+        // This method also can be done with this: Class::find()->update();
+        // but in this case we have to add 'protected $fillable in the Model and pass
+        // an array with which attributes can be massive edited because Eloquent
+        // doesn't know what comes before the update() and this can be a massive update
+        // $task = self::verifyTask($id)
+        // ->update(
+        //      ['title' => $request->title]
+        //  );
+
+        $task->save();
 
         return redirect()
             ->route('tasks.list')
@@ -68,8 +85,11 @@ class TasksController extends Controller
     public function delete($id)
     {
         $task = $this->verifyTask($id);
-        if ($task !== false) {
-            DB::delete('DELETE FROM tasks WHERE id = ?', [$id]);
+
+        if ($task) {
+            //Finding and deleting the task with id without instantiating
+            Task::find($id)->delete();
+
             return redirect()
                 ->route('tasks.list')
                 ->with('savedSuccefully', 'Task #' . $id . ' removed succefully.');
@@ -83,8 +103,10 @@ class TasksController extends Controller
     public function mark($id)
     {
         $task = $this->verifyTask($id);
-        if ($task !== false) {
-            DB::update('UPDATE tasks SET done = 1 - done WHERE id = ?', [$id]);
+        if ($task) {
+            $task = Task::find($id);
+            $task->done = 1 - $task->done;
+            $task->save();
 
             return redirect()
                 ->route('tasks.list')
@@ -96,9 +118,9 @@ class TasksController extends Controller
         };
     }
 
-    public function verifyTask($id)
+    private function verifyTask($id)
     {
-        $task = DB::select('SELECT `id`, `title` FROM tasks WHERE id = ?', [$id]);
-        return count($task) > 0 ? $task : false;
+        $task = Task::find($id);
+        return $task ?? false;
     }
 }
